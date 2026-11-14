@@ -1,0 +1,296 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Salon</title>
+<style>
+:root{--bg:#14111c;--panel:#1e1a2b;--line:#342d47;--text:#efeaf7;--muted:#9a90b3;--accent:#ff8fa8;--ok:#7be0b0}
+*{box-sizing:border-box}
+html,body{height:100%;margin:0}
+body{background:var(--bg);color:var(--text);font:15px/1.4 "Avenir Next","Segoe UI",system-ui,sans-serif}
+button,select,input{font:inherit;color:inherit}
+button{background:var(--panel);border:1px solid var(--line);border-radius:8px;padding:8px 14px;cursor:pointer}
+button:hover{border-color:var(--accent)}
+button.main{background:var(--accent);color:#2a0f18;border-color:var(--accent);font-weight:600}
+button:focus-visible,select:focus-visible,input:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+select,input[type=text]{background:var(--bg);border:1px solid var(--line);border-radius:8px;padding:7px 10px}
+#join{display:grid;place-items:center;height:100%;text-align:center;padding:24px}
+#join h1{font-size:2.4rem;margin:0 0 6px;letter-spacing:-.02em}
+#join p{color:var(--muted);margin:0 0 22px}
+#app{display:none;height:100%;grid-template-columns:1fr 320px;grid-template-rows:auto 1fr}
+header{grid-column:1/-1;display:flex;gap:10px;align-items:center;padding:10px 14px;border-bottom:1px solid var(--line)}
+header b{font-size:1.1rem;margin-right:auto}
+#status{color:var(--muted)}
+#status.on{color:var(--ok)}
+#stage{position:relative;background:#000;min-height:0;display:grid;place-items:center}
+#remote{width:100%;height:100%;object-fit:contain;background:#000}
+#empty{position:absolute;color:var(--muted);text-align:center;padding:20px}
+#stage .fs{position:absolute;right:12px;bottom:12px;opacity:.85}
+#local{position:absolute;left:12px;bottom:12px;width:190px;border:1px solid var(--line);border-radius:8px;background:#000;display:none}
+#stats{position:absolute;left:12px;top:12px;background:#000a;padding:4px 8px;border-radius:6px;font-size:12px;color:var(--ok);display:none}
+aside{display:flex;flex-direction:column;border-left:1px solid var(--line);min-height:0}
+.box{padding:14px;border-bottom:1px solid var(--line);display:grid;gap:10px}
+.row{display:grid;grid-template-columns:1fr 1fr;gap:8px;align-items:center}
+.row label{color:var(--muted);font-size:13px}
+.row.full{grid-template-columns:1fr}
+#chat{flex:1;display:flex;flex-direction:column;min-height:0}
+#msgs{flex:1;overflow:auto;padding:12px 14px;display:flex;flex-direction:column;gap:6px}
+#msgs div{background:var(--panel);padding:6px 10px;border-radius:10px;max-width:90%;word-wrap:break-word}
+#msgs .me{align-self:flex-end;background:#3a2433}
+#chatform{display:flex;gap:6px;padding:10px 14px;border-top:1px solid var(--line)}
+#chatform input{flex:1;min-width:0}
+@media(max-width:820px){#app{grid-template-columns:1fr;grid-template-rows:auto 45vh 1fr}aside{border-left:0}#local{width:110px}}
+@media(prefers-reduced-motion:reduce){*{transition:none!important}}
+</style>
+</head>
+<body>
+
+<div id="join">
+  <div>
+    <h1>Salon</h1>
+    <p>Votre écran, votre son, votre qualité. Juste vous deux.</p>
+    <button class="main" id="enter">Entrer dans le salon</button>
+  </div>
+</div>
+
+<div id="app">
+  <header>
+    <b>Salon</b>
+    <span id="status">En attente de l’autre personne…</span>
+    <button id="copy">Copier le lien</button>
+  </header>
+
+  <section id="stage">
+    <video id="remote" autoplay playsinline></video>
+    <div id="empty">Rien n’est partagé pour l’instant.<br>Quand l’autre personne partage son écran, il s’affiche ici.</div>
+    <div id="stats"></div>
+    <video id="local" autoplay playsinline muted></video>
+    <button class="fs" id="fs">Plein écran</button>
+  </section>
+
+  <aside>
+    <div class="box">
+      <div class="row">
+        <label for="res">Résolution</label>
+        <select id="res">
+          <option value="1280x720">720p</option>
+          <option value="1920x1080" selected>1080p</option>
+          <option value="2560x1440">1440p</option>
+          <option value="3840x2160">4K</option>
+        </select>
+      </div>
+      <div class="row">
+        <label for="fps">Images par seconde</label>
+        <select id="fps"><option>15</option><option>30</option><option selected>60</option></select>
+      </div>
+      <div class="row">
+        <label for="hint">Priorité</label>
+        <select id="hint">
+          <option value="motion" selected>Fluidité (films, jeux)</option>
+          <option value="detail">Netteté (images fixes)</option>
+          <option value="text">Texte</option>
+        </select>
+      </div>
+      <div class="row full">
+        <label for="br">Débit vidéo : <b id="brv">8</b> Mb/s</label>
+        <input type="range" id="br" min="1" max="50" value="8">
+      </div>
+      <div class="row full"><label><input type="checkbox" id="aud" checked> Partager le son</label></div>
+      <div class="row">
+        <button class="main" id="share">Partager l’écran</button>
+        <button id="mic">Micro</button>
+      </div>
+    </div>
+
+    <div id="chat">
+      <div id="msgs"></div>
+      <form id="chatform"><input type="text" id="msg" placeholder="Écrire un message" autocomplete="off"><button>Envoyer</button></form>
+    </div>
+  </aside>
+</div>
+
+<script>
+const $ = (id) => document.getElementById(id);
+const room = new URLSearchParams(location.search).get("room") || Math.random().toString(36).slice(2, 8);
+if (!location.search.includes("room=")) history.replaceState(null, "", "?room=" + room);
+
+let ws, pc, polite = false, makingOffer = false, ignoreOffer = false;
+let screenStream = null, micTrack = null, senders = {};
+const send = (o) => ws && ws.readyState === 1 && ws.send(JSON.stringify(o));
+const setStatus = (t, on) => { $("status").textContent = t; $("status").className = on ? "on" : ""; };
+
+$("enter").onclick = () => {
+  $("join").style.display = "none";
+  $("app").style.display = "grid";
+  connect();
+};
+
+function connect() {
+  ws = new WebSocket((location.protocol === "https:" ? "wss://" : "ws://") + location.host);
+  ws.onopen = () => send({ type: "join", room });
+  ws.onclose = () => setStatus("Déconnecté du serveur");
+  ws.onmessage = async ({ data }) => {
+    const m = JSON.parse(data);
+    if (m.type === "full") return setStatus("Salon complet (2 personnes max)");
+    if (m.type === "joined") { polite = m.polite; createPC(); if (polite) setStatus("Connexion…"); }
+    if (m.type === "peer-joined") { setStatus("Connexion…"); if (!pc) createPC(); kick(); }
+    if (m.type === "peer-left") { setStatus("L’autre personne est partie"); resetRemote(); createPC(); }
+    if (m.type === "chat") addMsg(m.text, false);
+    if (m.type === "description") await onDescription(m.description);
+    if (m.type === "candidate") { try { await pc.addIceCandidate(m.candidate); } catch (e) { if (!ignoreOffer) console.warn(e); } }
+  };
+}
+
+function createPC() {
+  if (pc) pc.close();
+  senders = {};
+  pc = new RTCPeerConnection({ iceServers: [{ urls: "stun:stun.l.google.com:19302" }, { urls: "stun:stun1.l.google.com:19302" }] });
+  pc.onicecandidate = (e) => e.candidate && send({ type: "candidate", candidate: e.candidate });
+  pc.onnegotiationneeded = async () => {
+    try { makingOffer = true; await pc.setLocalDescription(); send({ type: "description", description: pc.localDescription }); }
+    catch (e) { console.error(e); } finally { makingOffer = false; }
+  };
+  pc.onconnectionstatechange = () => {
+    if (pc.connectionState === "connected") setStatus("Connecté", true);
+    if (pc.connectionState === "failed") setStatus("Connexion impossible (réseau trop restrictif ?)");
+  };
+  pc.onsignalingstatechange = () => { if (pc.signalingState === "stable") applyQuality(); };
+  pc.ontrack = ({ track, streams }) => {
+    const stream = streams[0];
+    if (track.kind === "video") {
+      $("remote").srcObject = stream;
+      $("empty").style.display = "none";
+      track.onmute = () => { $("empty").style.display = "block"; $("stats").style.display = "none"; };
+      track.onunmute = () => { $("empty").style.display = "none"; $("stats").style.display = "block"; };
+    } else if (!stream.getVideoTracks().length && !streams.__mic) {
+      // audio sans vidéo = micro de l'autre personne
+      let a = $("remoteMic");
+      if (!a) { a = document.createElement("audio"); a.id = "remoteMic"; a.autoplay = true; document.body.appendChild(a); }
+      a.srcObject = stream;
+    }
+  };
+  // Si on partage déjà quelque chose, on le renvoie sur la nouvelle connexion
+  if (screenStream) addScreenTracks();
+  if (micTrack) senders.mic = pc.addTrack(micTrack, new MediaStream([micTrack]));
+}
+
+function kick() {
+  // L'une des deux personnes déclenche la négociation même sans média (pour recevoir)
+  if (!polite && pc.getTransceivers().length === 0) {
+    pc.addTransceiver("video", { direction: "recvonly" });
+  }
+}
+
+async function onDescription(desc) {
+  const collision = desc.type === "offer" && (makingOffer || pc.signalingState !== "stable");
+  ignoreOffer = !polite && collision;
+  if (ignoreOffer) return;
+  await pc.setRemoteDescription(desc);
+  if (desc.type === "offer") {
+    await pc.setLocalDescription();
+    send({ type: "description", description: pc.localDescription });
+  }
+}
+
+function resetRemote() { $("remote").srcObject = null; $("empty").style.display = "block"; $("stats").style.display = "none"; }
+
+// ---------- Partage d'écran ----------
+function addScreenTracks() {
+  screenStream.getTracks().forEach((t) => {
+    const s = pc.addTrack(t, screenStream);
+    senders[t.kind === "video" ? "video" : "audio"] = s;
+  });
+}
+
+$("share").onclick = async () => {
+  if (screenStream) return stopShare();
+  const [w, h] = $("res").value.split("x").map(Number);
+  try {
+    screenStream = await navigator.mediaDevices.getDisplayMedia({
+      video: { width: { ideal: w }, height: { ideal: h }, frameRate: { ideal: +$("fps").value } },
+      audio: $("aud").checked ? { echoCancellation: false, noiseSuppression: false, autoGainControl: false, channelCount: 2 } : false,
+      systemAudio: "include",
+    });
+  } catch (e) { return addSys("Partage annulé ou refusé."); }
+  const v = screenStream.getVideoTracks()[0];
+  v.onended = stopShare;
+  $("local").srcObject = screenStream; $("local").style.display = "block";
+  $("share").textContent = "Arrêter le partage"; $("share").classList.remove("main");
+  if (!screenStream.getAudioTracks().length && $("aud").checked) addSys("Pas de son capturé : choisis « Partager l’audio » dans la fenêtre du navigateur (Windows : écran entier ou onglet).");
+  addScreenTracks();
+};
+
+function stopShare() {
+  if (!screenStream) return;
+  screenStream.getTracks().forEach((t) => t.stop());
+  ["video", "audio"].forEach((k) => { if (senders[k]) { try { pc.removeTrack(senders[k]); } catch {} delete senders[k]; } });
+  screenStream = null;
+  $("local").style.display = "none";
+  $("share").textContent = "Partager l’écran"; $("share").classList.add("main");
+}
+
+async function applyQuality() {
+  if (!screenStream || !senders.video) return;
+  const v = screenStream.getVideoTracks()[0];
+  const [w, h] = $("res").value.split("x").map(Number);
+  const fps = +$("fps").value, hint = $("hint").value;
+  v.contentHint = hint;
+  try { await v.applyConstraints({ width: { ideal: w }, height: { ideal: h }, frameRate: { ideal: fps } }); } catch {}
+  try {
+    const p = senders.video.getParameters();
+    if (!p.encodings || !p.encodings.length) p.encodings = [{}];
+    p.encodings[0].maxBitrate = $("br").value * 1e6;
+    p.encodings[0].maxFramerate = fps;
+    p.encodings[0].scaleResolutionDownBy = 1;
+    p.degradationPreference = hint === "detail" || hint === "text" ? "maintain-resolution" : "maintain-framerate";
+    await senders.video.setParameters(p);
+    if (senders.audio) {
+      const a = senders.audio.getParameters();
+      if (a.encodings && a.encodings.length) { a.encodings[0].maxBitrate = 256000; await senders.audio.setParameters(a); }
+    }
+  } catch (e) { console.warn("setParameters", e); }
+}
+
+["res", "fps", "hint", "br"].forEach((id) => $(id).addEventListener("input", () => { $("brv").textContent = $("br").value; applyQuality(); }));
+
+// ---------- Micro ----------
+$("mic").onclick = async () => {
+  if (!micTrack) {
+    try {
+      const s = await navigator.mediaDevices.getUserMedia({ audio: { echoCancellation: true, noiseSuppression: true } });
+      micTrack = s.getAudioTracks()[0];
+      senders.mic = pc.addTrack(micTrack, new MediaStream([micTrack]));
+      $("mic").textContent = "Couper le micro";
+    } catch { addSys("Micro refusé."); }
+  } else {
+    micTrack.enabled = !micTrack.enabled;
+    $("mic").textContent = micTrack.enabled ? "Couper le micro" : "Micro";
+  }
+};
+
+// ---------- Stats en direct ----------
+let last = { bytes: 0, t: 0 };
+setInterval(async () => {
+  if (!pc || pc.connectionState !== "connected") return;
+  const stats = await pc.getStats();
+  stats.forEach((r) => {
+    if (r.type === "inbound-rtp" && r.kind === "video" && r.frameWidth) {
+      const dt = (r.timestamp - last.t) / 1000;
+      const mbps = last.t ? ((r.bytesReceived - last.bytes) * 8) / dt / 1e6 : 0;
+      last = { bytes: r.bytesReceived, t: r.timestamp };
+      $("stats").textContent = `${r.frameWidth}×${r.frameHeight} · ${Math.round(r.framesPerSecond || 0)} fps · ${mbps.toFixed(1)} Mb/s`;
+      $("stats").style.display = "block";
+    }
+  });
+}, 1000);
+
+// ---------- Chat, lien, plein écran ----------
+function addMsg(t, me) { const d = document.createElement("div"); d.textContent = t; if (me) d.className = "me"; $("msgs").appendChild(d); $("msgs").scrollTop = 1e9; }
+const addSys = (t) => { const d = document.createElement("div"); d.textContent = t; d.style.color = "var(--muted)"; $("msgs").appendChild(d); $("msgs").scrollTop = 1e9; };
+$("chatform").onsubmit = (e) => { e.preventDefault(); const t = $("msg").value.trim(); if (!t) return; send({ type: "chat", text: t }); addMsg(t, true); $("msg").value = ""; };
+$("copy").onclick = async () => { await navigator.clipboard.writeText(location.href); $("copy").textContent = "Lien copié"; setTimeout(() => ($("copy").textContent = "Copier le lien"), 1500); };
+$("fs").onclick = () => $("stage").requestFullscreen && $("stage").requestFullscreen();
+</script>
+</body>
+</html>
