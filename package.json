@@ -1,0 +1,16 @@
+{
+  "name": "globule-serveur",
+  "version": "1.0.0",
+  "description": "Globule — serveur de signalisation WebRTC (met en relation le diffuseur et les spectateurs)",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js"
+  },
+  "engines": {
+    "node": ">=18"
+  },
+  "dependencies": {
+    "ws": "^8.18.0"
+  },
+  "license": "MIT"
+}
