@@ -1,0 +1,206 @@
+<!doctype html>
+<html lang="fr">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="color-scheme" content="dark">
+  <meta name="theme-color" content="#0b0e1a">
+  <meta name="description" content="Globule — rejoignez une séance et regardez l'écran partagé en direct, en haute résolution et sans latence.">
+  <title>Globule — Séance en direct</title>
+
+  <link rel="icon" type="image/png" sizes="256x256" href="assets/icon.png">
+  <link rel="icon" type="image/png" sizes="192x192" href="assets/favicon-192.png">
+  <link rel="apple-touch-icon" href="assets/apple-touch-icon.png">
+
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Sora:wght@400;600;700;800&family=Inter:wght@400;500;600&display=swap">
+
+  <link rel="stylesheet" href="style.css">
+  <script src="config.js"></script>
+</head>
+<body>
+
+  <!-- Décor : halos lumineux de fond -->
+  <div class="bg" aria-hidden="true">
+    <div class="bg-glow bg-glow-a"></div>
+    <div class="bg-glow bg-glow-b"></div>
+    <div class="bg-grain"></div>
+  </div>
+
+  <!-- ================== ÉCRAN D'ACCUEIL ================== -->
+  <main id="home" class="screen">
+
+    <header class="topbar">
+      <div class="brand">
+        <span class="brand-logo" aria-hidden="true">
+          <img src="assets/icon.png" alt="">
+        </span>
+        <span class="brand-name">globule</span>
+      </div>
+
+      <button id="btn-settings" class="icon-btn" type="button" title="Réglages" aria-label="Réglages">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+          <circle cx="12" cy="12" r="3.2"/>
+          <path d="M19.4 15a1.7 1.7 0 0 0 .34 1.87l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.7 1.7 0 0 0-1.87-.34 1.7 1.7 0 0 0-1 1.55V21a2 2 0 1 1-4 0v-.09a1.7 1.7 0 0 0-1-1.55 1.7 1.7 0 0 0-1.87.34l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.7 1.7 0 0 0 .34-1.87 1.7 1.7 0 0 0-1.55-1H3a2 2 0 1 1 0-4h.09a1.7 1.7 0 0 0 1.55-1 1.7 1.7 0 0 0-.34-1.87l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.7 1.7 0 0 0 1.87.34h.08a1.7 1.7 0 0 0 1-1.55V3a2 2 0 1 1 4 0v.09a1.7 1.7 0 0 0 1 1.55h.08a1.7 1.7 0 0 0 1.87-.34l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.7 1.7 0 0 0-.34 1.87v.08a1.7 1.7 0 0 0 1.55 1H21a2 2 0 1 1 0 4h-.09a1.7 1.7 0 0 0-1.55 1Z"/>
+        </svg>
+      </button>
+    </header>
+
+    <section class="hero">
+      <div class="hero-logo" aria-hidden="true">
+        <img src="assets/icon.png" alt="">
+      </div>
+
+      <h1 class="hero-title">Un siège pour toi,<br><span class="grad">le film commence.</span></h1>
+      <p class="hero-sub" id="hero-tagline">Entrez le code de la séance transmis par votre diffuseur.</p>
+
+      <form id="join-form" class="join" autocomplete="off">
+        <label class="join-label" for="code">Code de séance</label>
+        <div class="join-row">
+          <input id="code" name="code" type="text" inputmode="text" spellcheck="false" maxlength="8"
+                 placeholder="EX : AB3D9F" aria-describedby="join-hint" />
+          <button id="btn-join" class="btn btn-primary" type="submit">
+            <span class="btn-label">Rejoindre la séance</span>
+          </button>
+        </div>
+        <p id="join-hint" class="join-hint">Le code s'affiche en grand sur l'application de votre diffuseur.</p>
+        <p id="home-error" class="form-error" role="alert" hidden></p>
+      </form>
+
+      <div class="server-banner" id="server-banner" hidden>
+        <p><strong>Serveur non configuré.</strong> Ouvrez les réglages (engrenage en haut à droite) et indiquez
+        l'adresse du serveur de signalisation, ou cliquez sur le lien complet que votre diffuseur vous a envoyé.</p>
+      </div>
+    </section>
+
+    <footer class="footer">
+      <p>Globule — ciné en deux clics, haute résolution, latence minimale.</p>
+    </footer>
+  </main>
+
+  <!-- ================== ÉCRAN DE VISIONNAGE ================== -->
+  <main id="watch" class="screen" hidden>
+
+    <div class="watch-top">
+      <div class="watch-session">
+        <span class="dot dot-live" id="live-dot" aria-hidden="true"></span>
+        <span id="watch-status">Connexion à la séance…</span>
+      </div>
+      <div class="watch-top-actions">
+        <button id="btn-watch-settings" class="icon-btn" type="button" title="Réglages" aria-label="Réglages">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+            <circle cx="12" cy="12" r="3.2"/>
+            <path d="M19.4 15a1.7 1.7 0 0 0 .34 1.87l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.7 1.7 0 0 0-1.87-.34 1.7 1.7 0 0 0-1 1.55V21a2 2 0 1 1-4 0v-.09a1.7 1.7 0 0 0-1-1.55 1.7 1.7 0 0 0-1.87.34l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.7 1.7 0 0 0 .34-1.87 1.7 1.7 0 0 0-1.55-1H3a2 2 0 1 1 0-4h.09a1.7 1.7 0 0 0 1.55-1 1.7 1.7 0 0 0-.34-1.87l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.7 1.7 0 0 0 1.87.34h.08a1.7 1.7 0 0 0 1-1.55V3a2 2 0 1 1 4 0v.09a1.7 1.7 0 0 0 1 1.55h.08a1.7 1.7 0 0 0 1.87-.34l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.7 1.7 0 0 0-.34 1.87v.08a1.7 1.7 0 0 0 1.55 1H21a2 2 0 1 1 0 4h-.09a1.7 1.7 0 0 0-1.55 1Z"/>
+          </svg>
+        </button>
+        <button id="btn-quit" class="btn btn-ghost btn-sm" type="button">Quitter</button>
+      </div>
+    </div>
+
+    <!-- Zone vidéo -->
+    <div id="stage" class="stage">
+      <video id="video" autoplay muted playsinline></video>
+
+      <!-- Voile d'attente : se lève SEULEMENT quand la vidéo joue
+           réellement (événement "playing" + filet de sécurité). -->
+      <div id="veil" class="veil" hidden>
+        <div class="veil-inner">
+          <div class="veil-logo" aria-hidden="true">
+            <img src="assets/icon.png" alt="">
+            <span class="veil-spin" aria-hidden="true"></span>
+          </div>
+          <p id="veil-text" class="veil-text">Connexion à la séance…</p>
+          <p id="veil-tip" class="veil-tip" hidden>
+            Ça tarde&nbsp;? Vérifiez que la diffusion est bien démarrée côté application,
+            et que le code de séance correspond. Un simple rafraîchissement de la page
+            relance aussi la séance.
+          </p>
+        </div>
+      </div>
+
+      <!-- Bouton de secours si le navigateur bloque la lecture -->
+      <button id="btn-force-play" class="btn btn-primary btn-xl" type="button" hidden>
+        Lancer la lecture
+      </button>
+    </div>
+
+    <!-- Bandeau son coupé -->
+    <button id="chip-sound" class="chip" type="button" hidden>
+      Lecture en sourdine — cliquez ici pour le son
+    </button>
+
+    <!-- Barre de contrôles -->
+    <div id="controls" class="controls" aria-label="Contrôles du lecteur">
+      <div class="controls-group">
+        <button id="btn-mute" class="icon-btn" type="button" title="Couper / activer le son" aria-label="Couper ou activer le son">
+          <svg id="ic-vol" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+            <path d="M11 5 6 9H2v6h4l5 4V5Z"/><path d="M15.5 8.5a5 5 0 0 1 0 7"/><path d="M18.5 5.5a9 9 0 0 1 0 13"/>
+          </svg>
+          <svg id="ic-muted" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" style="display:none">
+            <path d="M11 5 6 9H2v6h4l5 4V5Z"/><path d="m22 9-6 6"/><path d="m16 9 6 6"/>
+          </svg>
+        </button>
+        <input id="volume" type="range" min="0" max="100" value="100" aria-label="Volume" title="Volume">
+      </div>
+
+      <div class="controls-group">
+        <button id="btn-stats" class="btn btn-ghost btn-sm" type="button">Qualité du flux</button>
+        <button id="btn-fullscreen" class="icon-btn" type="button" title="Plein écran" aria-label="Plein écran">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+            <path d="M8 3H5a2 2 0 0 0-2 2v3"/><path d="M16 3h3a2 2 0 0 1 2 2v3"/><path d="M8 21H5a2 2 0 0 1-2-2v-3"/><path d="M16 21h3a2 2 0 0 0 2-2v-3"/>
+          </svg>
+        </button>
+      </div>
+    </div>
+
+    <!-- Panneau statistiques -->
+    <aside id="stats" class="stats" hidden aria-label="Statistiques du flux">
+      <div class="stat"><span class="stat-k">Résolution</span><span class="stat-v" id="st-res">—</span></div>
+      <div class="stat"><span class="stat-k">Images/s</span><span class="stat-v" id="st-fps">—</span></div>
+      <div class="stat"><span class="stat-k">Débit</span><span class="stat-v" id="st-bitrate">—</span></div>
+      <div class="stat"><span class="stat-k">Latence réseau</span><span class="stat-v" id="st-rtt">—</span></div>
+      <div class="stat"><span class="stat-k">Perte de paquets</span><span class="stat-v" id="st-loss">—</span></div>
+      <div class="stat"><span class="stat-k">État</span><span class="stat-v" id="st-state">—</span></div>
+    </aside>
+  </main>
+
+  <!-- ================== MODALE RÉGLAGES ================== -->
+  <div id="modal-settings" class="modal" hidden role="dialog" aria-modal="true" aria-labelledby="settings-title">
+    <div class="modal-card">
+      <div class="modal-head">
+        <h2 id="settings-title">Réglages</h2>
+        <button id="btn-settings-close" class="icon-btn" type="button" title="Fermer" aria-label="Fermer">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true">
+            <path d="M6 6l12 12M18 6 6 18"/>
+          </svg>
+        </button>
+      </div>
+
+      <div class="modal-body">
+        <label class="field">
+          <span class="field-label">URL du serveur de signalisation</span>
+          <input id="inp-server" type="text" spellcheck="false" placeholder="wss://mon-serveur.exemple.com"
+                 aria-describedby="server-help">
+          <span class="field-help" id="server-help">
+            À obtenir auprès de votre diffuseur. Mémorisée sur cet appareil uniquement —
+            c'est ce qui permet de changer de serveur sans republier le site.
+          </span>
+        </label>
+
+        <div class="modal-actions">
+          <button id="btn-server-reset" class="btn btn-ghost" type="button">Valeur par défaut du site</button>
+          <button id="btn-server-save" class="btn btn-primary" type="button">Enregistrer</button>
+        </div>
+
+        <p class="modal-note" id="settings-note"></p>
+      </div>
+    </div>
+  </div>
+
+  <!-- Toast -->
+  <div id="toast" class="toast" hidden role="status"></div>
+
+  <script src="app.js"></script>
+</body>
+</html>
